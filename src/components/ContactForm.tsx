@@ -1,198 +1,166 @@
 
 import { useState } from "react";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Textarea } from "./ui/textarea";
-import { Label } from "./ui/label";
-import { Checkbox } from "./ui/checkbox";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+
+const formSchema = z.object({
+  name: z.string().min(2, { message: "Имя должно содержать не менее 2 символов" }),
+  phone: z.string().min(10, { message: "Введите корректный номер телефона" }),
+  email: z.string().email({ message: "Введите корректный email" }),
+  company: z.string().optional(),
+  message: z.string().min(10, { message: "Сообщение должно содержать не менее 10 символов" }),
+});
 
 export const ContactForm = () => {
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    email: "",
-    message: "",
-    agreeToTerms: false,
-    submitting: false,
-    success: false,
-    error: null as string | null
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      phone: "",
+      email: "",
+      company: "",
+      message: "",
+    },
   });
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleCheckboxChange = (checked: boolean) => {
-    setFormData((prev) => ({ ...prev, agreeToTerms: checked }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setIsSubmitting(true);
     
-    if (!formData.agreeToTerms) {
-      setFormData((prev) => ({
-        ...prev,
-        error: "Необходимо согласиться с условиями обработки персональных данных"
-      }));
-      return;
-    }
-
-    setFormData((prev) => ({ ...prev, submitting: true, error: null }));
-
+    // Имитация отправки данных в AmoCRM
     try {
-      // Имитация отправки данных в AmoCRM
-      console.log("Отправка данных в AmoCRM:", {
-        name: formData.name,
-        phone: formData.phone,
-        email: formData.email,
-        message: formData.message
+      // В реальном проекте здесь будет интеграция с AmoCRM API
+      console.log("Отправка данных в AmoCRM:", values);
+      
+      // Имитация задержки запроса
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast({
+        title: "Заявка успешно отправлена",
+        description: "Наш менеджер свяжется с вами в ближайшее время",
       });
       
-      // Здесь должен быть реальный код отправки данных в AmoCRM через API
-      
-      // Имитация успешного ответа
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      setFormData((prev) => ({
-        ...prev,
-        submitting: false,
-        success: true,
-        name: "",
-        phone: "",
-        email: "",
-        message: "",
-        agreeToTerms: false
-      }));
-      
-      // Сбрасываем статус успеха через 5 секунд
-      setTimeout(() => {
-        setFormData((prev) => ({ ...prev, success: false }));
-      }, 5000);
-      
+      form.reset();
     } catch (error) {
-      setFormData((prev) => ({
-        ...prev,
-        submitting: false,
-        error: "Произошла ошибка при отправке формы. Пожалуйста, попробуйте еще раз."
-      }));
+      toast({
+        variant: "destructive",
+        title: "Ошибка при отправке заявки",
+        description: "Пожалуйста, попробуйте еще раз или свяжитесь с нами по телефону",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="bg-card border border-border rounded-lg p-6">
-      <h3 className="text-xl font-bold mb-4">Оставьте заявку</h3>
+    <div className="bg-card border border-border/40 rounded-lg p-6 shadow-sm">
+      <h3 className="text-xl font-semibold mb-4">Оставить заявку</h3>
       
-      {formData.success ? (
-        <div className="p-4 bg-primary/10 border border-primary/20 rounded-md mb-4">
-          <div className="flex items-center gap-2 text-primary font-medium">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-              <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
-            Спасибо! Ваша заявка успешно отправлена.
-          </div>
-          <p className="text-sm text-muted-foreground mt-2">
-            Наш менеджер свяжется с вами в ближайшее время.
-          </p>
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {formData.error && (
-            <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-md mb-4">
-              <p className="text-destructive text-sm">{formData.error}</p>
-            </div>
-          )}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Имя *</FormLabel>
+                <FormControl>
+                  <Input placeholder="Иван Иванов" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
           
-          <div className="space-y-2">
-            <Label htmlFor="name">Ваше имя *</Label>
-            <Input
-              id="name"
-              name="name"
-              required
-              value={formData.name}
-              onChange={handleChange}
-              placeholder="Иван Иванов"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="phone">Телефон *</Label>
-            <Input
-              id="phone"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
               name="phone"
-              type="tel"
-              required
-              value={formData.phone}
-              onChange={handleChange}
-              placeholder="+7 (___) ___-__-__"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Телефон *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="+7 (999) 123-45-67" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
+            
+            <FormField
+              control={form.control}
               name="email"
-              type="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="example@mail.com"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="example@mail.ru" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="message">Сообщение</Label>
-            <Textarea
-              id="message"
-              name="message"
-              value={formData.message}
-              onChange={handleChange}
-              placeholder="Опишите ваш запрос или задайте вопрос"
-              rows={4}
-            />
+          <FormField
+            control={form.control}
+            name="company"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Компания</FormLabel>
+                <FormControl>
+                  <Input placeholder="Название компании" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="message"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Сообщение *</FormLabel>
+                <FormControl>
+                  <Textarea 
+                    placeholder="Опишите ваш запрос или вопрос"
+                    className="min-h-[120px]"
+                    {...field} 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <div className="pt-2">
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? "Отправка..." : "Отправить заявку"}
+            </Button>
           </div>
           
-          <div className="flex items-start space-x-2">
-            <Checkbox
-              id="terms"
-              checked={formData.agreeToTerms}
-              onCheckedChange={handleCheckboxChange}
-            />
-            <div className="grid gap-1.5 leading-none">
-              <label
-                htmlFor="terms"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Я согласен с условиями обработки персональных данных
-              </label>
-              <p className="text-sm text-muted-foreground">
-                Нажимая на кнопку, вы даете согласие на обработку персональных данных
-              </p>
-            </div>
-          </div>
-          
-          <Button 
-            type="submit" 
-            className="w-full" 
-            disabled={formData.submitting}
-          >
-            {formData.submitting ? "Отправка..." : "Отправить заявку"}
-          </Button>
+          <p className="text-xs text-muted-foreground mt-4">
+            Нажимая кнопку "Отправить заявку", вы соглашаетесь с нашей политикой конфиденциальности
+            и даете согласие на обработку персональных данных.
+          </p>
         </form>
-      )}
-      
-      <div className="mt-4 pt-4 border-t border-border">
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
-          <span>Интеграция с AmoCRM</span>
-          <div className="flex items-center gap-1">
-            <span className="inline-block h-2 w-2 rounded-full bg-primary"></span>
-            <span>Безопасно</span>
-          </div>
-        </div>
-      </div>
+      </Form>
     </div>
   );
 };

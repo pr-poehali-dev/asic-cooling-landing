@@ -15,7 +15,7 @@ const Index = () => {
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
             <img src="/logo-b.svg" alt="Логотип" className="h-8 w-8" />
-            <span className="font-bold text-lg">HydroCoin</span>
+            <span className="font-bold text-lg">CryptoTech</span>
           </div>
           <nav className="hidden md:flex items-center gap-6">
             <a href="#features" className="text-sm hover:text-primary transition-colors">Преимущества</a>
@@ -60,7 +60,7 @@ const Index = () => {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
-                    <span>info@hydrocoin.ru</span>
+                    <span>info@cryptotech.ru</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
